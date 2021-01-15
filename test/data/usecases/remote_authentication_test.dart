@@ -13,19 +13,21 @@ class RemoteAuthentication {
   });
 
   Future<void> auth() async {
-    httpClient.request(url: url);
+    httpClient.request(url: url, method: 'post');
   }
 }
 
 abstract class HttpClient {
-  Future<void> request({@required String url});
+  Future<void> request({
+    @required String url,
+    @required String method,
+  });
 }
 
-class HttpClientSpy extends Mock implements HttpClient{}
+class HttpClientSpy extends Mock implements HttpClient {}
 
 void main() {
-  test('Should call HttpClient with correct URL', () async {
-
+  test('Should call HttpClient with correct values', () async {
     ///Utilização do triplo A
     ///1º Arrange -> Configuração de tudo que é necessário para que o teste possa rodar
     final httpClient = HttpClientSpy();
@@ -36,6 +38,9 @@ void main() {
     await sut.auth();
 
     ///3º Assert -> Verifica se a operação realizada na anterior (Act) surtiu o resultado esperado
-    verify(httpClient.request(url: url));
+    verify(httpClient.request(
+      url: url,
+      method: 'post',
+    ));
   });
 }
