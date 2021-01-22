@@ -2,6 +2,7 @@ import 'package:faker/faker.dart';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 
+import 'package:tdd_solid_design/domain/helpers/helpers.dart';
 import 'package:tdd_solid_design/domain/usecases/usecases.dart ';
 
 import 'package:tdd_solid_design/data/http/http.dart';
@@ -36,5 +37,24 @@ void main() {
         url: url,
         method: 'post',
         body: {'email': params.email, 'password': params.secret}));
+  });
+
+  test('Should throw UnexpectedError if HttpClient returns 400', () async {
+    when(httpClient.request(
+      url: anyNamed('url'),
+      method: anyNamed('method'),
+      body: anyNamed('body'),
+    )).thenThrow(HttpError.badRequest);
+
+    final params = AuthenticationParams(
+      email: faker.internet.email(),
+      secret: faker.internet.password(),
+    );
+
+    ///2º Act -> Executa o teste, chamando alguma função ou algo do tipo
+    final future = sut.auth(params);
+
+    ///3º Assert -> Verifica se a operação realizada na anterior (Act) surtiu o resultado esperado
+    expect(future, throwsA(DomainError.unexpected));
   });
 }
