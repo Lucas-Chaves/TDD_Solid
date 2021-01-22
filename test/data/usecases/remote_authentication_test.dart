@@ -116,4 +116,20 @@ void main() {
     ///3º Assert -> Verifica se a operação realizada na anterior (Act) surtiu o resultado esperado
     expect(account.token, accessToken);
   });
+
+  test('Should throw UnexpectedError if HttpClient returns 200 with invalid data', () async {
+    final accessToken = faker.guid.guid();
+    when(httpClient.request(
+      url: anyNamed('url'),
+      method: anyNamed('method'),
+      body: anyNamed('body'),
+    )).thenAnswer(
+        (_) async => {'invalid_key': 'invalid_value'});
+
+    ///2º Act -> Executa o teste, chamando alguma função ou algo do tipo
+    final future = sut.auth(params);
+
+    ///3º Assert -> Verifica se a operação realizada na anterior (Act) surtiu o resultado esperado
+    expect(future, throwsA(DomainError.unexpected));
+  });
 }
