@@ -93,4 +93,23 @@ void main() {
     ///3º Assert -> Verifica se a operação realizada na anterior (Act) surtiu o resultado esperado
     expect(future, throwsA(DomainError.unexpected));
   });
+
+  test('Should throw InvalidCredentialError if HttpClient returns 401', () async {
+    when(httpClient.request(
+      url: anyNamed('url'),
+      method: anyNamed('method'),
+      body: anyNamed('body'),
+    )).thenThrow(HttpError.unauthorized);
+
+    final params = AuthenticationParams(
+      email: faker.internet.email(),
+      secret: faker.internet.password(),
+    );
+
+    ///2º Act -> Executa o teste, chamando alguma função ou algo do tipo
+    final future = sut.auth(params);
+
+    ///3º Assert -> Verifica se a operação realizada na anterior (Act) surtiu o resultado esperado
+    expect(future, throwsA(DomainError.invalidCredentials));
+  });
 }
