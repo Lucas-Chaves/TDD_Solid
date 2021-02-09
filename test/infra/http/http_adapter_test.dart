@@ -6,30 +6,29 @@ import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 import 'package:meta/meta.dart';
 
-class ClientSpy extends Mock implements Client {}
+import 'package:tdd_solid_design/data/http/http.dart';
 
-class HttpAdapter {
+class HttpAdapter implements HttpClient {
   final Client client;
 
   HttpAdapter(this.client);
 
-  Future<void> request({
+  Future<Map> request({
     @required String url,
     @required String method,
-    Map body,
+    Map body
   }) async {
     final headers = {
       'content-type': 'application/json',
-      'accept': 'application/json',
+      'accept': 'application/json'
     };
     final jsonBody = body != null ? jsonEncode(body) : null;
-    await client.post(
-      url,
-      headers: headers,
-      body: jsonBody
-    );
+    final response = await client.post(url, headers: headers, body: jsonBody);
+    return jsonDecode(response.body);
   }
 }
+
+class ClientSpy extends Mock implements Client {}
 
 void main() {
   HttpAdapter sut;
@@ -44,24 +43,40 @@ void main() {
 
   group('post', () {
     test('Should call post with correct values', () async {
-      await sut
-          .request(url: url, method: 'post', body: {'any_key': "any_value"});
+      when(client.post(any, body: anyNamed('body'), headers: anyNamed('headers')))
+        .thenAnswer((_) async => Response('{"any_key":"any_value"}', 200));
 
-      verify(client.post(url,
-          headers: {
-            'content-type': 'application/json',
-            'accept': 'application/json',
-          },
-          body: '{"any_key":"any_value"}'));
+      await sut.request(url: url, method: 'post', body: {'any_key': 'any_value'});
+
+      verify(client.post(
+        url,
+        headers: {
+          'content-type': 'application/json',
+          'accept': 'application/json'
+        },
+        body: '{"any_key":"any_value"}'
+      ));
     });
 
-    test('Should call post without Body', () async {
+    test('Should call post without body', () async {
+      when(client.post(any, body: anyNamed('body'), headers: anyNamed('headers')))
+        .thenAnswer((_) async => Response('{"any_key":"any_value"}', 200));
+
       await sut.request(url: url, method: 'post');
 
       verify(client.post(
         any,
-        headers: anyNamed('headers'),
+        headers: anyNamed('headers')
       ));
+    });
+
+    test('Should return data if post returns 200', () async {
+      when(client.post(any, headers: anyNamed('headers')))
+        .thenAnswer((_) async => Response('{"any_key":"any_value"}', 200));
+
+      final response = await sut.request(url: url, method: 'post');
+
+      expect(response, {'any_key': 'any_value'});
     });
   });
 }
